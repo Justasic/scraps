@@ -29,6 +29,9 @@
     documentation and/or software.
 */
 
+// This source was copied from:
+// http://www.zedwood.com/article/121/cpp-md5-function
+
 /* interface header */
 #include "md5.h"
 
