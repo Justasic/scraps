@@ -68,9 +68,6 @@
     </item>
     <item row="3" column="0">
      <widget class="QComboBox" name="comboBox">
-      <property name="currentText">
-       <string>MD5</string>
-      </property>
       <item>
        <property name="text">
         <string>MD5</string>
