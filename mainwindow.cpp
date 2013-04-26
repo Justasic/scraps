@@ -4,7 +4,8 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    comboselected(0)
 {
     ui->setupUi(this);
 }
@@ -20,22 +21,29 @@ void MainWindow::on_pushButton_2_clicked()
     exit(0);
 }
 
-// Okay button
-void MainWindow::on_pushButton_clicked()
-{
-    QString arg1 = this->ui->lineEdit->text();
-    if(arg1.isEmpty())
-        this->ui->lineEdit_2->setText("Enter some text, nigger.");
-    else
-        this->ui->lineEdit_2->setText(QString().fromStdString(md5(arg1.toStdString())));
-}
-
 // Upper text box -> lineEdit
 // Lower text box -> lineEdit_2
 void MainWindow::on_lineEdit_textChanged(const QString &arg1)
 {
-    if(arg1.isEmpty())
-        this->ui->lineEdit_2->setText("Enter some text, nigger.");
-    else
-        this->ui->lineEdit_2->setText(QString().fromStdString(md5(arg1.toStdString())));
+    switch(this->comboselected)
+    {
+        case 0:
+            if(arg1.isEmpty())
+                this->ui->lineEdit_2->setText("Enter some text");
+            else
+                this->ui->lineEdit_2->setText(QString().fromStdString(md5(arg1.toStdString())));
+            break;
+        case 1:
+            if(arg1.isEmpty())
+                this->ui->lineEdit_2->setText("Enter some text");
+            else
+                this->ui->lineEdit_2->setText(arg1);
+        default:
+            break;
+    }
+}
+
+void MainWindow::on_comboBox_currentIndexChanged(int index)
+{
+    this->comboselected = index;
 }
