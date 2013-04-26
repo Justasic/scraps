@@ -38,7 +38,6 @@
 #include <string>
 #include <iostream>
 
-
 // a small class for calculating MD5 hashes of strings or byte arrays
 // it is not meant to be fast or secure
 //
@@ -49,10 +48,24 @@
 //      MD5(std::string).hexdigest()
 //
 // assumes that char is 8 bit and int is 32 bit
+
+#ifdef _WIN32
+// Fix windows integer types.
+typedef __int8 int8_t
+typedef unsigned __int8 uint8_t
+typedef __int16 int16_t
+typedef unsigned __int16 uint16_t
+typedef __int32 int32_t
+typedef unsigned __int32 uint32_t
+#else
+# include <stdint.h>
+#endif
+
+
 class MD5
 {
 public:
-  typedef unsigned int size_type; // must be 32bit
+  typedef uint32_t size_type; // must be 32bit
 
   MD5();
   MD5(const std::string& text);
@@ -64,8 +77,8 @@ public:
 
 private:
   void init();
-  typedef unsigned char uint1; //  8bit
-  typedef unsigned int uint4;  // 32bit
+  typedef uint8_t uint1; //  8bit
+  typedef uint32_t uint4;  // 32bit
   enum {blocksize = 64}; // VC6 won't eat a const static int here
 
   void transform(const uint1 block[blocksize]);
