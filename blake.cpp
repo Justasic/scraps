@@ -1,6 +1,7 @@
 #include <cstring>
 #include <cstdio>
-#include <cstdint>
+#include <stdint.h>
+#include <QString>
 
 #define U8TO32(p) \
   (((uint32_t)((p)[0]) << 24) | ((uint32_t)((p)[1]) << 16) | \
@@ -207,25 +208,23 @@ void blake512_hash( uint8_t *out, const uint8_t *in, uint64_t inlen )
       blake512_final( &S, out );
 }
 
+extern QString printfify(const char *fmt, ...);
+
 bool BlakeHash(QString &rethash, const QString &text)
 {
-    if(cmphash.size() > 64)
-        return false;
-
     uint8_t digest[64];
-    uint8_t testdigest[64];
     uint8_t data[65535]; // does it need to be this big and can it be this big???
     bool error = false;
 
     for(int i = 0; i < 64; ++i) // clear digest of all data.
         digest[i] = 0;
 
-    if(sizeof(data) < text.size()) // idk??? make sure we don't buffer overflow???
+    if(sizeof(data) < static_cast<unsigned long>(text.size())) // idk??? make sure we don't buffer overflow???
         return false;
 
     // Convert the Flux::string to a uint8_t array
-    for(unsigned i = 0; i < text.size(); ++i)
-        data[i] = static_cast<uint8_t>(text[i]);
+    for(int i = 0; i < text.size(); ++i)
+        data[i] = static_cast<uint8_t>(text[i].toAscii ());
 
     // Hash :)
     blake512_hash(digest, data, static_cast<uint64_t>(text.size()));

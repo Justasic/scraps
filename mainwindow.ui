@@ -75,12 +75,72 @@
       </item>
       <item>
        <property name="text">
+        <string>MD4</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
         <string>SHA-1</string>
        </property>
       </item>
       <item>
        <property name="text">
+        <string>SHA-2</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>SHA-3</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
         <string>SHA-256</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>SHA-384</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>SHA-512</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>RIPEMD-160</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>RIPEMD-320</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Whirlpool</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>GOST</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Tiger</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Skein</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Blake</string>
        </property>
       </item>
       <item>

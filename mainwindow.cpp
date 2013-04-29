@@ -50,6 +50,8 @@ void MainWindow::TextChanged(QString text)
         return;
     }
 
+    QString str;
+
     switch(this->comboselected)
     {
         case 0: // MD5
@@ -88,18 +90,17 @@ void MainWindow::TextChanged(QString text)
         case 11: // GOST
             //this->ui->lineEdit_2->setText();
             break;
-        case 11: // Tiger
+        case 12: // Tiger
             //this->ui->lineEdit_2->setText();
             break;
-        case 11: // Skein
+        case 13: // Skein
             //this->ui->lineEdit_2->setText();
             break;
-        case 11: // Blake
-            QString str;
+        case 14: // Blake
             if(BlakeHash(str, text))
                 this->ui->lineEdit_2->setText(str);
             break;
-        case 8: // NONE
+        case 15: // NONE
             this->ui->lineEdit_2->setText(text);
             break;
         default:
