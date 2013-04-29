@@ -184,19 +184,13 @@ namespace sha1
     }
 } // namespace sha1
 
-
+#include <QString>
 QString SHA1Hash(QString str)
 {
     unsigned char hash[20];
     char out[41];
     void *in = reinterpret_cast<void*>(const_cast<char*>(str.toStdString().c_str()));
     sha1::calc(in, str.length(), hash);
-/*
-    std::cout << "IN IS NULL! " << in << std::endl;
-    std::cout << "out: \"" << out << "\"" << std::endl;
-    std::cout << "hash: " << QString(hash, 20).toStdString() << std::endl;
-    exit(1);
-*/
     sha1::toHexString(hash, out);
     return QString(out);
 }

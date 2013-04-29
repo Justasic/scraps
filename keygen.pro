@@ -11,11 +11,11 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = keygen
 TEMPLATE = app
 
-
 SOURCES += main.cpp\
         mainwindow.cpp \
         md5.cpp \
-    sha1.cpp
+        sha1.cpp \
+        sha256.cpp
 
 HEADERS  += mainwindow.h \
     md5.h \

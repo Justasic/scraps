@@ -17,6 +17,7 @@ public:
     
 private slots:
     void on_pushButton_2_clicked();
+    void TextChanged(QString);
 
    // void on_pushButton_clicked();
 

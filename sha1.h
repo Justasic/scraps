@@ -28,8 +28,6 @@
 #ifndef SHA1_DEFINED
 #define SHA1_DEFINED
 
-#include <QString>
-
 namespace sha1
 {
 
@@ -47,7 +45,5 @@ namespace sha1
     void toHexString(const unsigned char* hash, char* hexstring);
 
 } // namespace sha1
-
-QString SHA1Hash(QString str);
 
 #endif // SHA1_DEFINED
