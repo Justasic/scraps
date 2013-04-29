@@ -2,6 +2,8 @@
 #include "ui_mainwindow.h"
 #include "md5.h"
 
+extern QString SHA1Hash(QString str);
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
@@ -27,13 +29,19 @@ void MainWindow::on_lineEdit_textChanged(const QString &arg1)
 {
     switch(this->comboselected)
     {
-        case 0:
+        case 0: // MD5
             if(arg1.isEmpty())
                 this->ui->lineEdit_2->setText("Enter some text");
             else
                 this->ui->lineEdit_2->setText(QString().fromStdString(md5(arg1.toStdString())));
             break;
-        case 1:
+        case 1: // SHA-1
+            if(arg1.isEmpty())
+                this->ui->lineEdit_2->setText("Enter some text");
+            else
+                this->ui->lineEdit_2->setText(SHA1Hash(arg1));
+            break;
+        case 2: // NONE
             if(arg1.isEmpty())
                 this->ui->lineEdit_2->setText("Enter some text");
             else

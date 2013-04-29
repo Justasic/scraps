@@ -75,6 +75,11 @@
       </item>
       <item>
        <property name="text">
+        <string>SHA-1</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
         <string>None</string>
        </property>
       </item>
