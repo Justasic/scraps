@@ -6,6 +6,7 @@ extern QString SHA1Hash(QString str);
 extern QString SHA256Hash(QString str);
 extern QString SHA1Hash(QString str);
 extern std::string md5(const std::string str);
+extern bool BlakeHash(QString &rethash, const QString &text);
 
 QString printfify(const char *fmt, ...)
 {
@@ -54,13 +55,51 @@ void MainWindow::TextChanged(QString text)
         case 0: // MD5
             this->ui->lineEdit_2->setText(QString().fromStdString(md5(text.toStdString())));
             break;
-        case 1: // SHA-1
+        case 1: // MD4
+            //this->ui->lineEdit_2->setText();
+            break;
+        case 2: // SHA-1
             this->ui->lineEdit_2->setText(SHA1Hash(text));
             break;
-        case 2: // SHA-256
+        case 3: // SHA-2
+            //this->ui->lineEdit_2->setText();
+            break;
+        case 4: // SHA-3
+            //this->ui->lineEdit_2->setText();
+            break;
+        case 5: // SHA-256
             this->ui->lineEdit_2->setText(SHA256Hash(text));
             break;
-        case 3: // NONE
+        case 6: // SHA-384
+            //this->ui->lineEdit_2->setText();
+            break;
+        case 7: // SHA-512
+            //this->ui->lineEdit_2->setText();
+            break;
+        case 8: // RIPEMD-128
+            //this->ui->lineEdit_2->setText();
+            break;
+        case 9: // RIPEMD-160
+            //this->ui->lineEdit_2->setText();
+            break;
+        case 10: // Whirlpool
+            //this->ui->lineEdit_2->setText();
+            break;
+        case 11: // GOST
+            //this->ui->lineEdit_2->setText();
+            break;
+        case 11: // Tiger
+            //this->ui->lineEdit_2->setText();
+            break;
+        case 11: // Skein
+            //this->ui->lineEdit_2->setText();
+            break;
+        case 11: // Blake
+            QString str;
+            if(BlakeHash(str, text))
+                this->ui->lineEdit_2->setText(str);
+            break;
+        case 8: // NONE
             this->ui->lineEdit_2->setText(text);
             break;
         default:
