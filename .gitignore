@@ -1,0 +1,8 @@
+# ignore object files
+*.o
+
+# Ignore specific qmake files
+moc_mainwindow.cpp
+ui_mainwindow.h
+keygen.pro.user
+Makefile
