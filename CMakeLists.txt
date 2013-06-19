@@ -10,6 +10,8 @@ endif(${CMAKE_CURRENT_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_BINARY_DIR} AND NOT W
 project(OpenGLTest CXX)
 enable_language(C)
 
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
 # Project version
 SET(${PROJECT_NAME}_MAJOR_VERSION 0)
 SET(${PROJECT_NAME}_MINOR_VERSION 0)
@@ -48,6 +50,11 @@ include(CheckCXXCompilerFlag)
 include(CheckCCompilerFlag)
 include(TestBigEndian)
 
+find_package(OpenGL REQUIRED)
+find_package(GLFW REQUIRED)
+find_package(FTGL REQUIRED)
+include_directories(${OPENGL_INCLUDES} ${GLFW_INCLUDE_DIR} ${FTGL_INCLUDE_DIRS})
+
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
 	add_definitions(-D__extern_always_inline=inline)
 endif(CMAKE_C_COMPILER_ID STREQUAL "Clang")
@@ -65,9 +72,10 @@ check_type_size(uint64_t UINT64_T)
 file(GLOB OPENGL_SRC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.cpp")
 list(SORT OPENGL_SRC)
 
-set_source_files_properties(${OPENGL_SRC} PROPERTIES LANGUAGE CXX COMPILE_FLAGS "${CXXFLAGS} -g")
+set_source_files_properties(${OPENGL_SRC} PROPERTIES LANGUAGE CXX COMPILE_FLAGS "${CXXFLAGS} -g -std=c++11")
 
 add_executable(${PROJECT_NAME} ${OPENGL_SRC})
-add_dependencies(${PROJECT_NAME} botlib${CMAKE_STATIC_LIBRARY_SUFFIX} jpeg-6${CMAKE_STATIC_LIBRARY_SUFFIX} splines${CMAKE_STATIC_LIBRARY_SUFFIX})
+add_dependencies(${PROJECT_NAME} ${OPENGL_LIBRARY} ${GLFW_LIBRARY} ${FTGL_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARY} ${GLFW_LIBRARY} ${FTGL_LIBRARIES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX PREFIX "" SUFFIX "")
