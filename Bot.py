@@ -86,7 +86,9 @@ class Bot(irc.IRCClient):
 		Generate an altered version of a nickname that caused a collision in an
 		effort to create an unused related name for subsequent registration.
 		"""
-		return nickname + '^'
+	        import random, time
+        	random.seed(time.time())
+		return nickname + '-%d' % random.randint(1, 999)
 
 	def AnnounceFeed(self, feedname, feed):
 		""" Announce a feed which supplies a feedparser instance """
