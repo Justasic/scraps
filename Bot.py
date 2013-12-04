@@ -70,13 +70,13 @@ class Bot(irc.IRCClient):
 
 	def signedOn(self):
 		"""Called when bot has succesfully signed on to server."""
-		self.join(self.factory.channel)
+		for channel in self.factory.channel:
+			self.join(channel)
+		self.CheckFeeds()
 
 	def joined(self, channel):
 		"""This will get called when the bot joins the channel."""
 		log.msg("[I have joined %s]" % channel)
-		# Start the feed checking ball rolling.
-		self.CheckFeeds()
 
 	def privmsg(self, user, channel, msg):
 		"""This will get called when the bot receives a message."""
@@ -127,19 +127,20 @@ class Bot(irc.IRCClient):
 		for e in feed:
 			url = tinyurl.create_one(e['link'])
 			message = "[\0032%s\017]: %s \002\00310--\017 \00314%s\017" % (feedname['Name'], e['title'], url)
-			self.msg(self.factory.channel, message.encode('utf-8'))
+			for channel in self.factory.channel:
+				self.msg(channel, message.encode('utf-8'))
 
 	def CheckFeeds(self):
 		""" Check all the feeds we're supposed to check and see
 		    if they need to be announced or not """
 		for feed in RSS_FEEDS:
-			log.msg("Checking feed \"%s\"..." % feed['Name'])
+			#log.msg("Checking feed \"%s\"..." % feed['Name'])
 			if feed['LastFeed'] is None:
 				f = feedparser.parse(feed['FeedLink'])
 			else:
 				etag = feed['LastFeed'].get('etag', None)
 				modified = feed_modified_date(feed['LastFeed'])
-				log.msg("Feed %s modified %s (etag: %s)" % (feed['Name'], modified, etag))
+				#log.msg("Feed %s modified %s (etag: %s)" % (feed['Name'], modified, etag))
 				f = feedparser.parse(feed['FeedLink'], etag=etag, modified=modified)
 
 			if len(f.entries) > 0:
@@ -192,9 +193,3 @@ class BotFactory(protocol.ClientFactory):
     def clientConnectionFailed(self, connector, reason):
         print "connection failed:", reason
         reactor.stop()
-
-
-#if __name__ == "__main__":
-#	log.startLogging(sys.stdout)
-#	BotFactory("#Computers", "15.0.1.10")
-#	reactor.run()

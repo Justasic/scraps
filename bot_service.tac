@@ -3,8 +3,8 @@ from twisted.application import service, internet
 from twisted.web import static, server
 import Bot
 
-#channel = "#Computers"
-channel = "#Test"
+channel = ["#Computers", "#News"]
+#channel = "#Test"
 host = "15.0.1.10"
 port = 6667
 
