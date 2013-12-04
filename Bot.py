@@ -8,9 +8,39 @@ import sys, time, feedparser, tinyurl
     feed information. LastFeed is the object of the last parsed feed.
 """
 RSS_FEEDS = [
-	{'Name': 'Drudge', 'FeedLink': 'http://www.drudgereportfeed.com/rss.xml', 'LastFeed': None},
+	#{'Name': 'Drudge', 'FeedLink': 'http://www.drudgereportfeed.com/rss.xml', 'LastFeed': None},
+	{'Name': 'Drudge', 'FeedLink': 'http://feeds.feedburner.com/drudgesiren/oGpG?format=xml', 'LastFeed': None},
 	{'Name': 'Mojang', 'FeedLink': 'https://mojang.com/feed/', 'LastFeed': None},
 ]
+
+def feed_modified_date(feed):
+    # this is the last-modified value in the response header
+    # do not confuse this with the time that is in each feed as the server
+    # may be using a different timezone for last-resposne headers than it
+    # uses for the publish date
+
+    modified = feed.get('modified')
+    if modified is not None:
+        return modified
+
+    return None
+
+def max_entry_date(feed):
+    entry_pub_dates = (e.get('updated_parsed') for e in feed.entries)
+    entry_pub_dates = tuple(e for e in entry_pub_dates if e is not None)
+
+    if len(entry_pub_dates) > 0:
+        return max(entry_pub_dates)
+
+    return None
+
+def entries_with_dates_after(feed, date):
+    response = []
+    for entry in feed.entries:
+        if entry.get('updated_parsed') > date:
+            response.append(entry)
+
+    return response
 
 class Bot(irc.IRCClient):
 	nickname = "Feeds"
@@ -94,43 +124,52 @@ class Bot(irc.IRCClient):
 		""" Announce a feed which supplies a feedparser instance """
 		# Check if the old feed entries were already there in the new feed.
 		# This will prevent re-announcements
-		for e in feed.entries:
-				url = tinyurl.create_one(e['link'])
-				message = "[\0032%s\017]: %s \002\00310--\017 \00314%s\017" % (feedname['Name'], e['title'], url)
-				self.msg(self.factory.channel, message.encode('utf-8'))
+		for e in feed:
+			url = tinyurl.create_one(e['link'])
+			message = "[\0032%s\017]: %s \002\00310--\017 \00314%s\017" % (feedname['Name'], e['title'], url)
+			self.msg(self.factory.channel, message.encode('utf-8'))
 
 	def CheckFeeds(self):
 		""" Check all the feeds we're supposed to check and see
 		    if they need to be announced or not """
 		for feed in RSS_FEEDS:
 			log.msg("Checking feed \"%s\"..." % feed['Name'])
-			if feed['LastFeed'] == None:
+			if feed['LastFeed'] is None:
 				f = feedparser.parse(feed['FeedLink'])
 			else:
-				lf = feed['LastFeed']
-				if hasattr(lf, 'etag'):
-					f = feedparser.parse(feed['FeedLink'], etag=lf.etag, modified=lf.modified)
+				etag = feed['LastFeed'].get('etag', None)
+				modified = feed_modified_date(feed['LastFeed'])
+				log.msg("Feed %s modified %s (etag: %s)" % (feed['Name'], modified, etag))
+				f = feedparser.parse(feed['FeedLink'], etag=etag, modified=modified)
+
+			if len(f.entries) > 0:
+				if feed['LastFeed'] is None:
+					log.msg("Feed %s has not been announced before, skipping..." % feed['Name'])
+					feed['LastFeed'] = f
+					continue
+
+				log.msg("Feed %s has possible new entries..." % feed['Name'])
+				prev_max_date = max_entry_date(f)
+				entries = entries_with_dates_after(f, prev_max_date)
+
+				for e in f.entries:
+					if e not in feed['LastFeed'].entries:
+						entries.append(e)
+
+				log.msg("%d new entries!" % len(entries))
+
+				if len(entries) > 0:
+					log.msg("Feed %s has %d new entries!" % (feed['Name'], len(entries)))
+					self.AnnounceFeed(feed, entries)
+					feed['LastFeed'] = f
 				else:
-					f = feedparser.parse(feed['FeedLink'], modified=lf.modified)
-
-			# See if the feed has updates, announce them if it does.
-			if f.status == 200:
-				log.msg("Feed %s has %d updates." % (feed['Name'], len(f.entries)))
-				f = feedparser.parse(feed['FeedLink'])
-				# Announce the feed only if the previous feed was there
-				if feed['LastFeed'] != None:
-					self.AnnounceFeed(feed, f)
-                		else:
-					log.msg("Skipping feed %s because it's never been announced before." % (feed['Name']))
-				# update Last feed last so we can use it in AnnounceFeed.
-				feed['LastFeed'] = f
-
+					log.msg("Feed %s has no etag or modified support..." % feed['Name'])
 		# Call back later to check for feeds.
 		self.checkTimer = reactor.callLater(15, self.CheckFeeds)
 
 
 class BotFactory(protocol.ClientFactory):
-    """A factory for LogBots.
+    """A factory for RSSBots.
 
     A new protocol instance will be created each time we connect to the server.
     """
