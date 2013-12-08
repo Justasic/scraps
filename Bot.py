@@ -50,6 +50,7 @@ class Bot(irc.IRCClient):
 	versionNum = "1.0"
 	versionEnv = "Python 2.7 on Linux"
 	checkTimer = None
+	isConnected= False
 
 	def kickedFrom(self, channel, kicker, message):
 		log.msg("%r was kicked from %r by %r: %r" % (self, channel, kicker, message))
@@ -58,11 +59,13 @@ class Bot(irc.IRCClient):
 	def connectionMade(self):
 		irc.IRCClient.connectionMade(self)
 		log.startLogging(sys.stdout)
+		self.isConnected = True
 		log.msg("[connected at %s]" %
 				time.asctime(time.localtime(time.time())))
 
 	def connectionLost(self, reason):
 		irc.IRCClient.connectionLost(self, reason)
+		self.isConnected = False
 		log.msg("[disconnected at %s]" %
 			time.asctime(time.localtime(time.time())))
 
@@ -72,7 +75,8 @@ class Bot(irc.IRCClient):
 		"""Called when bot has succesfully signed on to server."""
 		for channel in self.factory.channel:
 			self.join(channel)
-		self.CheckFeeds()
+		reactor.callInThread(self.CheckFeeds)
+		#self.CheckFeeds()
 
 	def joined(self, channel):
 		"""This will get called when the bot joins the channel."""
@@ -133,40 +137,43 @@ class Bot(irc.IRCClient):
 	def CheckFeeds(self):
 		""" Check all the feeds we're supposed to check and see
 		    if they need to be announced or not """
-		for feed in RSS_FEEDS:
-			#log.msg("Checking feed \"%s\"..." % feed['Name'])
-			if feed['LastFeed'] is None:
-				f = feedparser.parse(feed['FeedLink'])
-			else:
-				etag = feed['LastFeed'].get('etag', None)
-				modified = feed_modified_date(feed['LastFeed'])
-				#log.msg("Feed %s modified %s (etag: %s)" % (feed['Name'], modified, etag))
-				f = feedparser.parse(feed['FeedLink'], etag=etag, modified=modified)
-
-			if len(f.entries) > 0:
+		while self.isConnected:
+			for feed in RSS_FEEDS:
+				#log.msg("Checking feed \"%s\"..." % feed['Name'])
 				if feed['LastFeed'] is None:
-					log.msg("Feed %s has not been announced before, skipping..." % feed['Name'])
-					feed['LastFeed'] = f
-					continue
-
-				log.msg("Feed %s has possible new entries..." % feed['Name'])
-				prev_max_date = max_entry_date(f)
-				entries = entries_with_dates_after(f, prev_max_date)
-
-				for e in f.entries:
-					if e not in feed['LastFeed'].entries:
-						entries.append(e)
-
-				log.msg("%d new entries!" % len(entries))
-
-				if len(entries) > 0:
-					log.msg("Feed %s has %d new entries!" % (feed['Name'], len(entries)))
-					self.AnnounceFeed(feed, entries)
-					feed['LastFeed'] = f
+					f = feedparser.parse(feed['FeedLink'])
 				else:
-					log.msg("Feed %s has no etag or modified support..." % feed['Name'])
-		# Call back later to check for feeds.
-		self.checkTimer = reactor.callLater(15, self.CheckFeeds)
+					etag = feed['LastFeed'].get('etag', None)
+					modified = feed_modified_date(feed['LastFeed'])
+					#log.msg("Feed %s modified %s (etag: %s)" % (feed['Name'], modified, etag))
+					f = feedparser.parse(feed['FeedLink'], etag=etag, modified=modified)
+
+				if len(f.entries) > 0:
+					if feed['LastFeed'] is None:
+						log.msg("Feed %s has not been announced before, skipping..." % feed['Name'])
+						feed['LastFeed'] = f
+						continue
+
+					log.msg("Feed %s has possible new entries..." % feed['Name'])
+					prev_max_date = max_entry_date(f)
+					entries = entries_with_dates_after(f, prev_max_date)
+
+					for e in f.entries:
+						if e not in feed['LastFeed'].entries:
+							entries.append(e)
+
+					log.msg("%d new entries!" % len(entries))
+
+					if len(entries) > 0:
+						log.msg("Feed %s has %d new entries!" % (feed['Name'], len(entries)))
+						#self.AnnounceFeed(feed, entries)
+						reactor.callFromThread(self.AnnounceFeed, feed, entries)
+						feed['LastFeed'] = f
+					else:
+						log.msg("Feed %s has no etag or modified support..." % feed['Name'])
+			time.sleep(15)
+			# Call back later to check for feeds.
+			#self.checkTimer = reactor.callLater(15, self.CheckFeeds)
 
 
 class BotFactory(protocol.ClientFactory):
