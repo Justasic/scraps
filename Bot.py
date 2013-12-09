@@ -3,15 +3,6 @@ from twisted.internet import reactor, protocol
 from twisted.python import log
 import sys, time, feedparser, tinyurl, json, os, CommandHandler
 
-""" RSS_FEEDS is a dictionary of dictionaries. The entry name is the feed
-    name which will be announced in IRC. FeedLink is the link used to get
-    feed information. LastFeed is the object of the last parsed feed.
-"""
-#RSS_FEEDS = [
-#	{'Name': 'Drudge', 'FeedLink': 'http://feeds.feedburner.com/drudgesiren/oGpG?format=xml', 'LastFeed': None},
-#	{'Name': 'Mojang', 'FeedLink': 'https://mojang.com/feed/', 'LastFeed': None},
-#]
-
 def feed_modified_date(feed):
     # this is the last-modified value in the response header
     # do not confuse this with the time that is in each feed as the server
@@ -221,14 +212,14 @@ class Bot(irc.IRCClient):
 		""" Check all the feeds we're supposed to check and see
 		    if they need to be announced or not """
 
-		while self.isConnected and not self.factory.database.getValue('Feeds'):
-			# Sleep until there is feed data to pull.
-			log.msg("No feeds to pull, sleeping for 10 seconds...")
-			self.CheckDrudgeFeed()
-			time.sleep(10)
-
 		while self.isConnected:
 			self.CheckDrudgeFeed()
+
+			if not self.factory.database.getValue('Feeds'):
+				# If there's no feeds to check, sleep but always check Drudge.
+				time.sleep(15)
+				continue
+
 			db = self.factory.database.getDB()
 			for feed in db['Feeds']:
 				#log.msg("Checking feed \"%s\"..." % feed['Name'])
