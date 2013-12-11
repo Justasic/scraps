@@ -1,7 +1,10 @@
 from twisted.words.protocols import irc
 from twisted.internet import reactor, protocol
 from twisted.python import log
-import sys, time, feedparser, tinyurl, json, os, CommandHandler
+import sys, time, feedparser, tinyurl, json, os, CommandHandler, ts3
+from Formatting import format as ircformat
+from BeautifulSoup import BeautifulSoup
+from HTMLParser import HTMLParser
 
 def feed_modified_date(feed):
     # this is the last-modified value in the response header
@@ -81,6 +84,7 @@ class Bot(irc.IRCClient):
 	checkTimer = None
 	isConnected= False
 	olddrudge = None
+	oldClients = None
 
 	def kickedFrom(self, channel, kicker, message):
 		log.msg("%r was kicked from %r by %r: %r" % (self, channel, kicker, message))
@@ -105,7 +109,10 @@ class Bot(irc.IRCClient):
 		"""Called when bot has succesfully signed on to server."""
 		for channel in self.factory.channel:
 			self.join(channel)
+		srv = TeamSpeakChecker('15.0.1.10', 'Justasic', 'hNSZQNfn')
+		srv.login()
 		reactor.callInThread(self.CheckFeeds)
+		reactor.callInThread(self.CheckTS3, srv)
 
 	def joined(self, channel):
 		"""This will get called when the bot joins the channel."""
@@ -200,9 +207,16 @@ class Bot(irc.IRCClient):
 			print "Titles: %s new, %s old: %s actual new" % (len(titles_new), len(titles_old), len(sorted_titles))
 			feeds = []
 			for t in sorted_titles:
-				for f in feed.entries:
-					if f['title'] == t:
-						feeds.append(f)
+				for fe in feed.entries:
+					if fe['title'] == t:
+						p = BeautifulSoup(fe['summary']).find('font')
+						fe['title'] = HTMLParser().unescape(fe['title'])
+						# Use BeautifulSoup to check if the feed was colored or not
+						# Change the IRC text to the color if it was.
+						# NOTE: this is a gamble... if it's hex, we're screwed.
+						if p and p['color'] != "black":
+							fe['title'] = ircformat(fe['title'], p['color'])
+						feeds.append(fe)
 
 			reactor.callFromThread(self.AnnounceFeed, {'Name': 'Drudge'}, feeds)
 
@@ -287,3 +301,23 @@ class BotFactory(protocol.ClientFactory):
 
     def stopFactory(self):
 	self.database.save()
+
+class TeamSpeakChecker():
+
+	def __init__(self, server, username, password, port = 10011, sid = 1):
+		self.server = server
+		self.port = port
+		self.serverid = sid
+		self.username = username
+		self.password = password
+
+	def login(self):
+		self._srv = ts3.TS3Server(self.server, self.port, self.serverid)
+		self._srv.login(self.username, self.password)
+
+	def getClients(self):
+		try:
+			return self._srv.clientlist()
+		except EOFError:
+			self.login()
+			return self._srv.clientlist()
