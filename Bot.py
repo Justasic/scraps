@@ -109,10 +109,10 @@ class Bot(irc.IRCClient):
 		"""Called when bot has succesfully signed on to server."""
 		for channel in self.factory.channel:
 			self.join(channel)
-		srv = TeamSpeakChecker('15.0.1.10', 'Justasic', 'hNSZQNfn')
-		srv.login()
+		#srv = TeamSpeakChecker('localhost', '<username>', '<password>')
+		#srv.login()
 		reactor.callInThread(self.CheckFeeds)
-		reactor.callInThread(self.CheckTS3, srv)
+		#reactor.callInThread(self.CheckTS3, srv)
 
 	def joined(self, channel):
 		"""This will get called when the bot joins the channel."""
