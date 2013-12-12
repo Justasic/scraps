@@ -5,6 +5,7 @@ import sys, time, feedparser, tinyurl, json, os, CommandHandler, ts3
 from Formatting import format as ircformat
 from BeautifulSoup import BeautifulSoup
 from HTMLParser import HTMLParser
+from copy import deepcopy
 
 def feed_modified_date(feed):
     # this is the last-modified value in the response header
@@ -206,8 +207,9 @@ class Bot(irc.IRCClient):
 		if len(sorted_titles) > 0:
 			print "Titles: %s new, %s old: %s actual new" % (len(titles_new), len(titles_old), len(sorted_titles))
 			feeds = []
+			feedmod = deepcopy(feed)
 			for t in sorted_titles:
-				for fe in feed.entries:
+				for fe in feedmod.entries:
 					if fe['title'] == t:
 						p = BeautifulSoup(fe['summary']).find('font')
 						fe['title'] = HTMLParser().unescape(fe['title'])
@@ -221,6 +223,37 @@ class Bot(irc.IRCClient):
 			reactor.callFromThread(self.AnnounceFeed, {'Name': 'Drudge'}, feeds)
 
 		self.olddrudge = feed
+
+	def CheckTS3(self, srv):
+		while self.isConnected:
+			#log.msg("Checking Teamspeak...")
+			clients = srv.getClients()
+			message = None
+			joined_clients = []
+			if not self.oldClients:
+				message = "[\0032TeamSpeak\017]: %d total users in teamspeak." % int(len(clients.values())-1)
+				for channel in self.factory.channel:
+					reactor.callFromThread(self.msg, channel, message.encode('utf-8'))
+				self.oldClients = clients
+				continue
+
+			if len(clients.values()) > len(self.oldClients.values()):
+				num = len(clients.values()) - len(self.oldClients.values())
+				message = "[\0032TeamSpeak\017]: %d user%s joined the teamspeak server, %d total." % (num, len(clients.values())-1)
+				for channel in self.factory.channel:
+					reactor.callFromThread(self.msg, channel, message.encode('utf-8'))
+
+			for c in clients.values():
+				if c not in self.oldClients.values():
+					joined_clients.append(c['client_nickname'])
+
+			if len(joined_clients) > 0:
+				message = "[\0032TeamSpeak\017]: %s joined/parted the teamspeak server, %d total." % (', '.join(joined_clients), len(clients.values())-1)
+				for channel in self.factory.channel:
+					reactor.callFromThread(self.msg, channel, message.encode('utf-8'))
+				
+			self.oldClients = clients
+			time.sleep(5)
 
 	def CheckFeeds(self):
 		""" Check all the feeds we're supposed to check and see
